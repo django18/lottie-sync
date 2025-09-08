@@ -1,42 +1,25 @@
-# Multi-Player Lottie Synchronization Tool
+# Lottie Multi-Player Sync
 
-A sophisticated single-page application for synchronizing multiple Lottie animation players with advanced state management, scalable architecture, and real-world performance optimizations.
+A React application for synchronizing multiple Lottie animation players with frame-perfect precision. Built with XState for robust state management and designed to scale from single-user demos to enterprise deployments.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Functionality
-- **Multi-Player Support**: DotLottie, LottieWeb, and Skottie (with CanvasKit) players
-- **Synchronized Playback**: Frame-perfect synchronization across all players
-- **Dual Sync Modes**: Global synchronization or individual player control
-- **File Format Support**: Both .lottie and .json Lottie files
-- **Drag & Drop Upload**: Intuitive file management with validation
-- **Real-time Controls**: Play, pause, stop, seek, speed control, and loop toggle
+### Prerequisites
 
-### Advanced Architecture
-- **XState Actor Model**: Hierarchical state machines for complex state management
-- **Performance Monitoring**: Frame rate tracking, sync latency measurement, drift detection
-- **Error Resilience**: Comprehensive error boundaries with graceful degradation
-- **Memory Optimization**: Proper cleanup and disposal of player instances
-- **Scalable Design**: Architecture supports 10+ concurrent players
+- Node.js 18+
+- npm or yarn
 
-## 🛠️ Technical Stack
-
-- **Frontend**: React 19 + TypeScript + Vite
-- **State Management**: XState 5 with React integration
-- **Styling**: Tailwind CSS with custom design system
-- **Player Libraries**: @lottiefiles/dotlottie-web, lottie-web
-- **File Handling**: react-dropzone with validation
-- **Testing**: Vitest + Testing Library + jsdom
-- **Development**: ESLint, Prettier, TypeScript strict mode
-
-## 📦 Installation
+### Installation & Development
 
 ```bash
-# Install dependencies
+# Clone and install
+git clone <repository-url>
+cd lottie-sync-app
 npm install
 
 # Start development server
 npm run dev
+# Opens at http://localhost:5173
 
 # Build for production
 npm run build
@@ -44,73 +27,138 @@ npm run build
 # Run tests
 npm run test
 
-# Run linting
+# Lint code
 npm run lint
 ```
 
-## 🏗️ Project Structure
+### Using the Application
 
-```
-src/
-├── components/          # React UI components
-├── hooks/              # Custom React hooks
-├── machines/           # XState machine definitions
-├── services/           # Player integrations and sync services
-├── types/             # TypeScript definitions
-└── styles/            # Tailwind configurations
-```
+1. **Upload Lottie files** - Drag & drop `.lottie` or `.json` files
+2. **Add players** - Click "Add Player" to create DotLottie instances
+3. **Select animation** - Choose a file from the uploaded list
+4. **Control playback** - Use global controls to sync all players
+5. **Monitor performance** - View real-time sync metrics
 
-## 🎯 Usage
+**Hosting URL**: _[Will be added when deployed]_
 
-### Basic Usage
-1. **Upload Files**: Drag and drop .lottie or .json files into the upload area
-2. **Add Players**: Click "Add Player" and select player type (DotLottie, LottieWeb, Skottie)
-3. **Select Animation**: Choose a file from the uploaded files list
-4. **Control Playback**: Use global controls to synchronize all players
+## 🏗️ Architecture Overview
 
-### Advanced Features
-- **Sync Modes**: Toggle between "Global Sync" and "Individual" control modes
-- **Performance Monitoring**: View real-time frame rate and sync metrics
-- **Error Recovery**: Automatic retry for failed player initialization
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
+This application uses a **hierarchical state machine architecture** with XState to manage complex synchronization across multiple animation players.
 
-## 🔧 Architecture Deep Dive
+### Key Components
 
-### XState Machine Architecture
+- **Enhanced Application Machine** - Main orchestrator
+- **Sync Machine** - Animation loading and synchronization
+- **Player Machine** - Individual player lifecycle management
+- **React Components** - UI presentation layer
 
-The application uses a sophisticated hierarchical state machine architecture with separate actors for each concern:
+### Current Capabilities
 
-- **Application Machine**: Global state and file uploads
-- **Player Machines**: Individual player lifecycle management
-- **Sync Coordinator**: Master/slave synchronization with drift correction
-- **File Manager**: Validation, processing, and storage
+- ✅ **1-4 players** synchronized at 60fps
+- ✅ **Basic error recovery** with retry logic
+- ✅ **Memory management** with proper cleanup
+- ✅ **Performance monitoring** via console logging
 
-### Performance Optimizations
+## 📚 Documentation
 
-1. **Frame Rate Adaptation**: 60fps target, degrades to 30fps under load
-2. **Batch Updates**: Minimizes React re-renders
-3. **Memory Management**: Proper cleanup and disposal
-4. **Lazy Loading**: Players initialized on demand
-5. **Sync Threshold**: Configurable drift tolerance (16.67ms)
+### For Different Roles
 
-## 🧪 Testing & Development
+**🏗️ Architects & Senior Developers**
 
-- **Unit Tests**: Components and services
-- **Integration Tests**: State machine transitions  
-- **Performance Tests**: Sync accuracy benchmarks
-- **Development Server**: http://localhost:5173/
+- **[Architecture Decision Record](./docs/ARCHITECTURE.md)** - Complete design rationale and technical decisions
+- **[Scaling Strategies](./docs/SCALING_STRATEGIES.md)** - How to scale from 10 to 200+ players
 
-## 📈 Performance Benchmarks
+**👨‍💻 Developers**
 
-- **Sync Accuracy**: <16ms drift between players
-- **Memory Usage**: <50MB for 4 concurrent players
-- **Bundle Size**: ~400KB gzipped
-- **Startup Time**: <2s to interactive
+- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Practical patterns, testing, and best practices
+- **[Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)** - Detailed state machine documentation
 
-## 🔮 Architecture Decisions
+**👨‍💼 Product Managers**
 
-See [CHANGELOG.md](./CHANGELOG.md) for detailed architectural decisions, trade-offs, and implementation rationale.
+- **[Current State & Improvements](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)** - Honest assessment and roadmap
 
-## 📜 License
+**🧪 QA Engineers**
+
+- **[Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)** - Event flows and testing scenarios
+
+### Quick Navigation
+
+- **Getting Started**: This README + [Developer Guide](./docs/DEVELOPER_GUIDE.md)
+- **Understanding Architecture**: [Architecture Decisions](./docs/ARCHITECTURE.md)
+- **Implementation Details**: [Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)
+- **Scaling Plans**: [Scaling Strategies](./docs/SCALING_STRATEGIES.md)
+- **Current Limitations**: [State & Improvements](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)
+
+## 🔧 Technical Stack
+
+**Core Technologies**
+
+- React 19 + TypeScript + Vite
+- XState 5 (state management)
+- Tailwind CSS (styling)
+- @lottiefiles/dotlottie-web (player)
+
+**Development Tools**
+
+- Vitest (testing)
+- ESLint + Prettier (code quality)
+- TypeScript strict mode
+
+## 📈 Performance Characteristics
+
+**Current Implementation**
+
+- **Player Limit**: 10 players (can be extended)
+- **Sync Latency**: 16.67ms (60fps) with throttling
+- **Memory Usage**: ~10-50MB per player
+- **Error Recovery**: Basic retry logic (max 3 attempts)
+
+**Known Limitations**
+
+- No adaptive performance optimization
+- Console-based logging (not production-ready)
+- Dual app architecture (App.tsx vs AppSync.tsx)
+- Fixed sync thresholds
+
+## 🛣️ Roadmap
+
+### Immediate (1-2 weeks)
+
+- Remove 10-player hard limit
+- Add structured logging
+- Consolidate app architecture
+
+### Short-term (1-2 months)
+
+- Implement adaptive sync throttling
+- Add comprehensive error recovery
+- Web Worker integration for 25-50 players
+
+### Long-term (3-6 months)
+
+- Distributed architecture for 50-200 players
+- Network synchronization
+- Enterprise monitoring and analytics
+
+_See [Scaling Strategies](./docs/SCALING_STRATEGIES.md) for detailed technical roadmap._
+
+## 🤝 Contributing
+
+1. Read the [Developer Guide](./docs/DEVELOPER_GUIDE.md) for development patterns
+2. Check [Architecture Decisions](./docs/ARCHITECTURE.md) to understand design choices
+3. Follow existing code patterns and state machine conventions
+4. Add tests for new functionality
+5. Update documentation for architectural changes
+
+## 📄 License
 
 MIT License - See LICENSE file for details.
+
+---
+
+**Need Help?**
+
+- Architecture questions → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- Development help → [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)
+- Performance concerns → [SCALING_STRATEGIES.md](./docs/SCALING_STRATEGIES.md)
+- Current limitations → [CURRENT_STATE_AND_IMPROVEMENTS.md](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)
