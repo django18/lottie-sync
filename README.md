@@ -39,7 +39,7 @@ npm run lint
 4. **Control playback** - Use global controls to sync all players
 5. **Monitor performance** - View real-time sync metrics
 
-**Hosting URL**: _[Will be added when deployed]_
+**🌐 Live Demo**: [https://lottie-sync-ek1r14w6g-avinash-dangis-projects.vercel.app/](https://lottie-sync-ek1r14w6g-avinash-dangis-projects.vercel.app/)
 
 ## 🏗️ Architecture Overview
 
@@ -54,7 +54,7 @@ This application uses a **hierarchical state machine architecture** with XState 
 
 ### Current Capabilities
 
-- ✅ **1-4 players** synchronized at 60fps
+- ✅ **1-4![1757292805055](image/README/1757292805055.png)![1757292808306](image/README/1757292808306.png) players** synchronized at 60fps
 - ✅ **Basic error recovery** with retry logic
 - ✅ **Memory management** with proper cleanup
 - ✅ **Performance monitoring** via console logging
