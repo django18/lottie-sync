@@ -1,10 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { useMachine } from '@xstate/react';
 import { syncMachine } from './machines/syncMachine';
-import { FileUploadSync } from './components/FileUploadSync';
-import { PlayerGrid } from './components/PlayerGrid';
-import { SyncControlBar } from './components/SyncControlBar';
 import { ErrorBoundary } from './components';
+
+// Lazy load heavy components
+const FileUploadSync = lazy(() =>
+  import('./components/FileUploadSync').then((m) => ({ default: m.FileUploadSync }))
+);
+const PlayerGrid = lazy(() =>
+  import('./components/PlayerGrid').then((m) => ({ default: m.PlayerGrid }))
+);
+const SyncControlBar = lazy(() =>
+  import('./components/SyncControlBar').then((m) => ({ default: m.SyncControlBar }))
+);
 
 function AppSync() {
   const [state, , actorRef] = useMachine(syncMachine);
@@ -111,7 +119,9 @@ function AppSync() {
             {/* File Upload */}
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-sm font-medium text-gray-900 mb-4">Load Animation</h3>
-              <FileUploadSync actorRef={actorRef} disabled={isLoading} />
+              <Suspense fallback={<div className="animate-pulse bg-gray-200 h-20 rounded"></div>}>
+                <FileUploadSync actorRef={actorRef} disabled={isLoading} />
+              </Suspense>
             </div>
 
             {/* Animation Info */}
@@ -222,18 +232,22 @@ function AppSync() {
               </div>
             ) : (
               <div className="h-full p-6">
-                <PlayerGrid actorRef={actorRef} />
+                <Suspense fallback={<div className="animate-pulse bg-gray-200 h-64 rounded"></div>}>
+                  <PlayerGrid actorRef={actorRef} />
+                </Suspense>
               </div>
             )}
           </div>
         </div>
 
         {/* Bottom Control Bar */}
-        <SyncControlBar
-          actorRef={actorRef}
-          globalZoom={globalZoom}
-          onGlobalZoomChange={handleZoomChange}
-        />
+        <Suspense fallback={<div className="animate-pulse bg-gray-200 h-16"></div>}>
+          <SyncControlBar
+            actorRef={actorRef}
+            globalZoom={globalZoom}
+            onGlobalZoomChange={handleZoomChange}
+          />
+        </Suspense>
       </div>
     </ErrorBoundary>
   );
