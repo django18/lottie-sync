@@ -26,20 +26,9 @@ export function GlobalControls({
   compact = false,
   className = '',
 }: GlobalControlsProps) {
-  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const frame = parseInt(e.target.value);
-    onSeek(frame);
-  };
-
   const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const speed = parseFloat(e.target.value);
     onSpeedChange(speed);
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (

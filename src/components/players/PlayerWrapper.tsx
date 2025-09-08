@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { useMemo, useCallback, useRef, useEffect } from 'react';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useSelector } from '@xstate/react';

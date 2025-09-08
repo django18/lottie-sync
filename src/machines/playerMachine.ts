@@ -121,16 +121,11 @@ export const playerMachine = createMachine(
             invoke: {
               id: 'frameUpdater',
               src: fromPromise(async ({ input }: { input: any }) => {
-                const { instance, config } = input;
+                const { instance } = input;
 
                 return new Promise<void>((resolve) => {
                   const updateFrame = () => {
                     if (instance && typeof instance.currentFrame !== 'undefined') {
-                      const currentFrame = Math.floor(instance.currentFrame);
-                      const totalFrames = instance.totalFrames || 0;
-                      const currentTime = currentFrame / 30;
-                      const duration = totalFrames / 30;
-
                       // Send frame update event
                       // This would be handled by the parent machine
                       resolve();
@@ -320,7 +315,7 @@ export const playerMachine = createMachine(
       }),
       assignPlayerInstance: assign({
         instance: ({ event }) => (event as any).output.instance,
-        state: ({ context, event }) => ({
+        state: ({ context }) => ({
           ...context.state,
           id: context.config.id,
           type: context.config.type,
@@ -351,7 +346,7 @@ export const playerMachine = createMachine(
         }
       },
       seek: ({ context, event }) => {
-        const { frame, time } = event as any;
+        const { frame } = event as any;
         if (context.instance) {
           if (typeof frame !== 'undefined') {
             context.instance.setFrame(frame);

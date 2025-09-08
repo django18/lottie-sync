@@ -626,7 +626,7 @@ export const syncMachine = createMachine(
         lastSyncTime: () => Date.now(),
       }),
 
-      handleLoopComplete: ({ context }) => {
+      handleLoopComplete: () => {
         console.log('🔄 [SYNC-MACHINE] Loop complete, continuing playback');
         // For looped animations, we don't change state
       },

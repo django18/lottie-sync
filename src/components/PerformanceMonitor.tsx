@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePerformanceMetrics, type PerformanceMetrics } from '../hooks/usePerformanceMetrics';
+import { usePerformanceMetrics } from '../hooks/usePerformanceMetrics';
 
 interface PerformanceMonitorProps {
   activePlayers: number;

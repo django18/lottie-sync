@@ -413,7 +413,6 @@ export class DotLottieAdapter implements PlayerAdapter {
 
   private async _waitForReady(): Promise<void> {
     const waitId = `wait-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const waitStartTime = performance.now();
 
     return new Promise<void>((resolve, reject) => {
       console.log(`⏳ [WAIT-${waitId}] Starting _waitForReady promise...`);
@@ -444,7 +443,6 @@ export class DotLottieAdapter implements PlayerAdapter {
       });
 
       let frameCheckInterval: number;
-      let eventCheckCount = 0;
 
       const cleanup = () => {
         console.log(`🧹 [WAIT-${waitId}] Cleaning up event listeners and intervals...`);
@@ -948,9 +946,7 @@ export class DotLottieAdapter implements PlayerAdapter {
 export class LottieWebAdapter implements PlayerAdapter {
   private instance: any = null;
   private eventListeners: Map<string, Function[]> = new Map();
-  private container: HTMLElement | null = null;
   private isDestroyed: boolean = false;
-  private animationData: any = null;
 
   async initialize(container: HTMLElement, file: LottieFile, config: PlayerConfig): Promise<any> {
     if (this.isDestroyed) {
@@ -959,8 +955,6 @@ export class LottieWebAdapter implements PlayerAdapter {
 
     try {
       const { default: lottie } = await import('lottie-web');
-
-      this.container = container;
 
       // For LottieWeb, we need to load the animation data from the file
       let animationData;
@@ -975,8 +969,6 @@ export class LottieWebAdapter implements PlayerAdapter {
         const response = await fetch(file.url);
         animationData = await response.json();
       }
-
-      this.animationData = animationData;
 
       this.instance = lottie.loadAnimation({
         container: container,
@@ -1085,8 +1077,6 @@ export class LottieWebAdapter implements PlayerAdapter {
     }
 
     this.eventListeners.clear();
-    this.container = null;
-    this.animationData = null;
   }
 
   addEventListener(event: string, callback: Function): void {

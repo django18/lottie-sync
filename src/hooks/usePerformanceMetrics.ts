@@ -39,7 +39,7 @@ export function usePerformanceMetrics(options: UsePerformanceMetricsOptions = {}
   const frameTimestamps = useRef<number[]>([]);
   const syncEvents = useRef<{ playerId: string; timestamp: number; frame: number }[]>([]);
   const lastFrameTime = useRef<number>(performance.now());
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Record frame update
   const recordFrame = useCallback((playerId: string, frame: number) => {

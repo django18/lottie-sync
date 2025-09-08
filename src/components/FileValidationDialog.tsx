@@ -1,4 +1,3 @@
-import React from 'react';
 import type { LottieFile } from '../types';
 import { ErrorDisplay } from './ErrorDisplay';
 

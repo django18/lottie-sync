@@ -20,6 +20,7 @@ export function usePlayerManager(options: UsePlayerManagerOptions = {}) {
         adapter: PlayerAdapter;
         actorRef: any;
         container: HTMLElement;
+        type: PlayerType;
       }
     >
   >(new Map());
@@ -161,6 +162,7 @@ export function usePlayerManager(options: UsePlayerManagerOptions = {}) {
           adapter,
           actorRef,
           container,
+          type,
         });
 
         const totalTime = performance.now() - startTime;
@@ -220,7 +222,7 @@ export function usePlayerManager(options: UsePlayerManagerOptions = {}) {
         // Return adapter to pool instead of destroying
         try {
           console.log(`🔄 [PLAYER-${playerId}] Returning adapter to pool...`);
-          const playerType = player.adapter.type || 'lottie-web';
+          const playerType = player.type;
           simplePlayerPool.releasePlayer(playerType as 'lottie-web' | 'dotlottie', player.adapter);
           console.log(`✅ [PLAYER-${playerId}] Adapter returned to pool successfully`);
         } catch (error) {

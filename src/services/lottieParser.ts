@@ -51,24 +51,6 @@ export interface ValidationResult {
   warnings: string[];
 }
 
-function extractMetadata(animationData: LottieAnimation): ParsedLottie['metadata'] {
-  const frameRate = animationData.fr || 30;
-  const inPoint = animationData.ip || 0;
-  const outPoint = animationData.op || 0;
-  const totalFrames = Math.max(0, outPoint - inPoint);
-  const duration = totalFrames / frameRate;
-
-  return {
-    frameRate,
-    totalFrames,
-    duration,
-    width: animationData.w || 512,
-    height: animationData.h || 512,
-    version: animationData.v,
-    name: animationData.nm,
-  };
-}
-
 function findAnimationInArchive(files: Record<string, Uint8Array>): LottieAnimation {
   const decoder = new TextDecoder();
 

@@ -92,7 +92,7 @@ export function OptimizationMonitor() {
           <div>
             <h4 className="font-medium text-gray-700 mb-2">🔥 Top Assets</h4>
             <div className="space-y-1">
-              {cacheStats.mostAccessedAssets.slice(0, 3).map((asset: any, index: number) => (
+              {cacheStats.mostAccessedAssets.slice(0, 3).map((asset: any) => (
                 <div key={asset.key} className="flex justify-between text-xs">
                   <span className="text-gray-600 truncate max-w-32" title={asset.key}>
                     {asset.key.split('_')[0]}...

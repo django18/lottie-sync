@@ -153,11 +153,11 @@ export class RetryService {
     const playerConfig = { ...this.config, ...PLAYER_SPECIFIC_CONFIGS[playerType] };
 
     if (state.totalRetries >= playerConfig.maxAttempts) {
-      return this.getFinalAdvice(state, errorType, playerType);
+      return this.getFinalAdvice(state, errorType);
     }
 
     if (!this.isRetryableError(errorType, playerConfig.retryableErrors)) {
-      return this.getNonRetryableAdvice(errorType, playerType);
+      return this.getNonRetryableAdvice(errorType);
     }
 
     const nextDelay = this.calculateDelay(state.totalRetries, playerConfig);
@@ -231,7 +231,7 @@ export class RetryService {
     return `${uniqueErrorTypes.join(', ')} (${state.attempts.length} attempts)`;
   }
 
-  private getFinalAdvice(state: RetryState, errorType: string, playerType: PlayerType): string {
+  private getFinalAdvice(state: RetryState, errorType: string): string {
     const errorCount = state.attempts.length;
 
     switch (errorType) {
@@ -250,7 +250,7 @@ export class RetryService {
     }
   }
 
-  private getNonRetryableAdvice(errorType: string, playerType: PlayerType): string {
+  private getNonRetryableAdvice(errorType: string): string {
     switch (errorType) {
       case 'validation':
         return 'Invalid animation file. Please check that your file is a valid Lottie animation.';

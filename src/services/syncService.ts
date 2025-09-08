@@ -14,7 +14,6 @@ export class SynchronizationService {
   private syncInterval: number | null = null;
   private performanceMetrics: PerformanceMetrics[] = [];
   private isBroadcasting: boolean = false; // Prevent infinite loops
-  private eventQueue: SyncEvent[] = []; // Queue events to prevent blocking
 
   constructor(options: Partial<SyncOptions> = {}) {
     this.syncOptions = {
@@ -186,7 +185,6 @@ export class SynchronizationService {
         return;
       }
 
-      const playerFrame = adapter.getCurrentFrame();
       const playerTime = adapter.getCurrentTime();
 
       const timeDrift = Math.abs(masterTime - playerTime) * 1000; // Convert to ms

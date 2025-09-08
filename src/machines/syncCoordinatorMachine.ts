@@ -1,4 +1,4 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign, fromCallback, fromPromise } from 'xstate';
 import type { SyncCoordinatorContext, SyncCoordinatorEvent } from '../types/machines';
 import type { SyncEvent } from '../types';
 
@@ -164,7 +164,7 @@ export const syncCoordinatorMachine = createMachine(
 
       updatePerformanceMode: assign({
         performanceMode: ({ event }) => (event as any).mode,
-        syncThreshold: ({ context, event }) => {
+        syncThreshold: ({ event }) => {
           const mode = (event as any).mode;
           return mode === 'performance' ? 33.33 : 16.67;
         },
@@ -203,14 +203,12 @@ export const syncCoordinatorMachine = createMachine(
         }
       },
 
-      completeSyncCorrection: ({ context }) => {
+      completeSyncCorrection: () => {
         console.log('Sync correction completed');
       },
 
       forceSync: ({ context }) => {
         if (context.masterPlayerId && context.playerRefs.has(context.masterPlayerId)) {
-          const masterRef = context.playerRefs.get(context.masterPlayerId);
-
           const forceSyncEvent: SyncEvent = {
             type: 'seek',
             timestamp: Date.now(),
@@ -273,21 +271,21 @@ export const syncCoordinatorMachine = createMachine(
     },
 
     actors: {
-      syncMonitorService:
-        ({ context }) =>
-        (callback) => {
-          const monitorInterval = setInterval(() => {
-            if (context.syncMode === 'global' && context.playerRefs.size > 1) {
-              callback({ type: 'VALIDATE_SYNC' });
-            }
-          }, context.syncThreshold);
+      syncMonitorService: fromCallback(({ sendBack, input }: { sendBack: any; input: any }) => {
+        const { context } = input;
+        const monitorInterval = setInterval(() => {
+          if (context.syncMode === 'global' && context.playerRefs.size > 1) {
+            sendBack({ type: 'VALIDATE_SYNC' });
+          }
+        }, context.syncThreshold);
 
-          return () => {
-            clearInterval(monitorInterval);
-          };
-        },
+        return () => {
+          clearInterval(monitorInterval);
+        };
+      }),
 
-      validateSyncService: async ({ context }) => {
+      validateSyncService: fromPromise(async ({ input }: { input: any }) => {
+        const { context } = input;
         return new Promise<{ inSync: boolean; maxDrift: number }>((resolve) => {
           const players = Array.from(context.playerRefs.entries());
 
@@ -296,14 +294,21 @@ export const syncCoordinatorMachine = createMachine(
             return;
           }
 
-          let maxDrift = 0;
-          let inSync = true;
+          const frames = (players as [string, any][]).map(([id, ref]) => {
+            try {
+              return { id, frame: ref.send({ type: 'GET_CURRENT_FRAME' }) || 0 };
+            } catch {
+              return { id, frame: 0 };
+            }
+          });
 
-          setTimeout(() => {
-            resolve({ inSync, maxDrift });
-          }, 10);
+          const frameValues = frames.map((f: any) => f.frame);
+          const maxDrift = Math.max(...frameValues) - Math.min(...frameValues);
+          const inSync = maxDrift <= context.syncThreshold;
+
+          resolve({ inSync, maxDrift });
         });
-      },
+      }),
     },
   }
 );
