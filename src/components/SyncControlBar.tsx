@@ -1,4 +1,4 @@
-import { useCallback, memo } from 'react';
+import { useCallback, memo, useMemo, useRef } from 'react';
 import { useSelector } from '@xstate/react';
 import type { SyncActorRef } from '../machines/syncMachine';
 import { useKeyboardShortcuts } from '../hooks';
@@ -15,28 +15,63 @@ const SyncControlBarComponent = ({
   onGlobalZoomChange,
   className = '',
 }: SyncControlBarProps) => {
-  // Optimize useSelector to only re-render when specific values change
+  const lastFrameRef = useRef<number>(-1);
+  
+  // Optimized useSelector with smarter frame update logic
   const { playbackState, currentFrame, speed, loop, zoom, synchronizationMode, metadata, players } =
-    useSelector(actorRef, (state: any) => ({
-      playbackState: state.context.playbackState,
-      currentFrame: Math.round(state.context.currentFrame), // Round to avoid floating point re-renders
-      speed: state.context.speed,
-      loop: state.context.loop,
-      zoom: state.context.zoom,
-      synchronizationMode: state.context.synchronizationMode,
-      metadata: state.context.metadata,
-      players: state.context.players,
-    }));
+    useSelector(actorRef, (state: any) => {
+      const rawFrame = state.context.currentFrame;
+      const roundedFrame = Math.round(rawFrame);
+      
+      // Always update frame during playback to keep seek bar moving, but throttle updates
+      // Only throttle when playing and frame changed by less than 0.5 frames
+      const isPlaying = state.context.playbackState === 'playing';
+      const frameChanged = Math.abs(roundedFrame - lastFrameRef.current) >= 0.5;
+      
+      const shouldUpdate = !isPlaying || frameChanged || lastFrameRef.current === -1;
+      
+      if (shouldUpdate) {
+        lastFrameRef.current = roundedFrame;
+      }
+      
+      return {
+        playbackState: state.context.playbackState,
+        currentFrame: roundedFrame, // Always use current frame for smooth progress
+        speed: state.context.speed,
+        loop: state.context.loop,
+        zoom: state.context.zoom,
+        synchronizationMode: state.context.synchronizationMode,
+        metadata: state.context.metadata,
+        players: state.context.players,
+      };
+    });
 
-  const totalFrames = metadata?.totalFrames || 0;
-  const duration = metadata?.duration || 0;
-  const frameRate = metadata?.frameRate || 30;
-
-  const isPlaying = playbackState === 'playing';
-  const isStopped = playbackState === 'stopped';
-  const hasAnimation = !!metadata;
-  const hasPlayers = players.length > 0;
-  const readyPlayers = players.filter((p: any) => p.status === 'ready').length;
+  // Memoize expensive calculations
+  const { totalFrames, duration, frameRate, isPlaying, isStopped, hasAnimation, hasPlayers, readyPlayers, canControl, sliderValue } = useMemo(() => {
+    const totalFrames = metadata?.totalFrames || 0;
+    const duration = metadata?.duration || 0;
+    const frameRate = metadata?.frameRate || 30;
+    const isPlaying = playbackState === 'playing';
+    const isStopped = playbackState === 'stopped';
+    const hasAnimation = !!metadata;
+    const hasPlayers = players.length > 0;
+    const readyPlayers = players.filter((p: any) => p.status === 'ready').length;
+    const canControl = hasAnimation && hasPlayers && readyPlayers > 0;
+    const sliderValue = Math.max(0, Math.min(totalFrames - 1, currentFrame));
+    
+    return {
+      totalFrames,
+      duration,
+      frameRate,
+      isPlaying,
+      isStopped,
+      hasAnimation,
+      hasPlayers,
+      readyPlayers,
+      canControl,
+      sliderValue,
+    };
+  }, [metadata, playbackState, players, currentFrame]);
 
   const handlePlay = useCallback(() => {
     actorRef.send({ type: 'PLAY' });
@@ -87,8 +122,6 @@ const SyncControlBarComponent = ({
     },
     [actorRef, onGlobalZoomChange]
   );
-
-  const canControl = hasAnimation && hasPlayers && readyPlayers > 0;
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -160,7 +193,7 @@ const SyncControlBarComponent = ({
                 type="range"
                 min="0"
                 max={Math.max(0, totalFrames - 1)}
-                value={Math.max(0, Math.min(totalFrames - 1, currentFrame))}
+                value={sliderValue}
                 onChange={handleSeek}
                 disabled={!canControl || totalFrames === 0}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"

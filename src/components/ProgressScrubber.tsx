@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 interface ProgressScrubberProps {
   currentFrame: number;
@@ -36,15 +36,33 @@ export function ProgressScrubber({
   const [isHovering, setIsHovering] = useState(false);
   const [hoverFrame, setHoverFrame] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const lastRenderFrameRef = useRef<number>(-1);
 
-  const displayFrame = isDragging ? dragFrame : currentFrame;
-  // Fix: Ensure time calculation can reach full duration when at final frame
-  const displayTime = isDragging
-    ? (dragFrame / Math.max(1, totalFrames - 1)) * duration
-    : currentTime;
-  // Fix: Ensure percentage can reach exactly 100% when at final frame
-  const progressPercentage =
-    totalFrames > 0 ? Math.min(100, (displayFrame / Math.max(1, totalFrames - 1)) * 100) : 0;
+  // Memoize calculations while allowing smooth progress during playback
+  const { displayFrame, displayTime, progressPercentage } = useMemo(() => {
+    const currentFrameRounded = Math.round(currentFrame);
+    
+    // Always update during playback for smooth progress, only throttle micro-changes when not dragging
+    const shouldUpdate = isDragging || !isPlaying || 
+                        Math.abs(currentFrameRounded - lastRenderFrameRef.current) >= 0.5 || 
+                        lastRenderFrameRef.current === -1;
+    
+    if (shouldUpdate) {
+      lastRenderFrameRef.current = currentFrameRounded;
+    }
+    
+    // Use actual current frame for smooth progress during playback
+    const displayFrame = isDragging ? dragFrame : currentFrame;
+    // Fix: Ensure time calculation can reach full duration when at final frame
+    const displayTime = isDragging
+      ? (dragFrame / Math.max(1, totalFrames - 1)) * duration
+      : currentTime;
+    // Fix: Ensure percentage can reach exactly 100% when at final frame
+    const progressPercentage =
+      totalFrames > 0 ? Math.min(100, (displayFrame / Math.max(1, totalFrames - 1)) * 100) : 0;
+      
+    return { displayFrame, displayTime, progressPercentage };
+  }, [currentFrame, dragFrame, isDragging, isPlaying, totalFrames, duration, currentTime]);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -229,19 +247,23 @@ export function ProgressScrubber({
 
           {/* Progress Fill */}
           <div
-            className={`absolute top-1 left-1 rounded-md transition-all duration-100 ${
+            className={`absolute top-1 left-1 rounded-md transition-all duration-100 progress-fill ${
               isPlaying ? 'bg-green-500' : 'bg-blue-500'
             }`}
             style={{
-              width: `calc(${progressPercentage}% - 4px)`,
+              '--progress': `${progressPercentage}%`,
+              width: `calc(var(--progress) - 4px)`,
               height: 'calc(100% - 8px)',
-            }}
+            } as React.CSSProperties}
           />
 
           {/* Current Position Indicator - Larger, more visible handle */}
           <div
-            className="absolute top-0 bottom-0 w-3 bg-white border-2 border-gray-800 rounded-md transform -translate-x-1.5 transition-all duration-100 shadow-lg cursor-grab active:cursor-grabbing hover:border-blue-600"
-            style={{ left: `${progressPercentage}%` }}
+            className="absolute top-0 bottom-0 w-3 bg-white border-2 border-gray-800 rounded-md transform -translate-x-1.5 transition-all duration-100 shadow-lg cursor-grab active:cursor-grabbing hover:border-blue-600 progress-thumb"
+            style={{
+              '--progress': `${progressPercentage}%`,
+              left: 'var(--progress)',
+            } as React.CSSProperties}
           />
 
           {/* Hover Indicator */}

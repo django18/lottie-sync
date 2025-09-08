@@ -123,10 +123,9 @@ export function PlayerWrapper({
       const now = Date.now();
       const frameChanged = Math.abs(frame - lastFrameValueRef.current) >= 0.5;
 
-      // Throttle frame updates to max 15 FPS for state updates (while maintaining smooth animation)
-      // Only send if frame changed significantly or enough time passed
+      // Balanced throttling: update on frame changes or every 66ms (~15 FPS)
+      // This provides smooth seek bar updates while reducing unnecessary state changes
       if (frameChanged || now - lastFrameUpdateRef.current >= 66) {
-        // ~15 FPS throttling
         lastFrameUpdateRef.current = now;
         lastFrameValueRef.current = frame;
         actorRef.send({ type: 'FRAME_UPDATE', frame, time, playerId });
@@ -147,11 +146,11 @@ export function PlayerWrapper({
     const player = playerRef.current;
     const currentTime = Date.now();
 
-    // Improved throttling for better performance
-    if (currentTime - lastSyncTime.current < 33) return; // ~30fps throttle (better for performance)
+    // Balanced throttling for smooth playback with good performance
+    if (currentTime - lastSyncTime.current < 33) return; // ~30fps throttle
 
     try {
-      // Handle seeking (most important for immediate response)
+      // Handle seeking (most important for immediate response)  
       if (Math.abs(currentFrame - lastSyncFrame.current) > 0.5) {
         player.seek(Math.round(currentFrame));
         lastSyncFrame.current = currentFrame;
