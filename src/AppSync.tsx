@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { useMachine } from '@xstate/react';
 import { syncMachine } from './machines/syncMachine';
 import { FileUploadSync } from './components/FileUploadSync';
@@ -8,6 +9,12 @@ import { ErrorBoundary } from './components';
 function AppSync() {
   const [state, , actorRef] = useMachine(syncMachine);
   const { context } = state;
+  const [globalZoom, setGlobalZoom] = useState(1);
+
+  const handleZoomChange = useCallback((zoom: number) => {
+    console.log('🔍 [APP-SYNC] Zoom change:', zoom);
+    setGlobalZoom(zoom);
+  }, []);
 
   console.log('🎭 [APP-SYNC] Current state:', state.value);
   console.log('📊 [APP-SYNC] Context:', {
@@ -222,7 +229,11 @@ function AppSync() {
         </div>
 
         {/* Bottom Control Bar */}
-        <SyncControlBar actorRef={actorRef} />
+        <SyncControlBar
+          actorRef={actorRef}
+          globalZoom={globalZoom}
+          onGlobalZoomChange={handleZoomChange}
+        />
       </div>
     </ErrorBoundary>
   );

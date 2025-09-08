@@ -1,20 +1,28 @@
 import { useCallback, memo } from 'react';
 import { useSelector } from '@xstate/react';
 import type { SyncActorRef } from '../machines/syncMachine';
+import { useKeyboardShortcuts } from '../hooks';
 
 interface SyncControlBarProps {
   actorRef: SyncActorRef;
+  globalZoom?: number;
+  onGlobalZoomChange?: (zoom: number) => void;
   className?: string;
 }
 
-const SyncControlBarComponent = ({ actorRef, className = '' }: SyncControlBarProps) => {
+const SyncControlBarComponent = ({
+  actorRef,
+  onGlobalZoomChange,
+  className = '',
+}: SyncControlBarProps) => {
   // Optimize useSelector to only re-render when specific values change
-  const { playbackState, currentFrame, speed, loop, synchronizationMode, metadata, players } =
+  const { playbackState, currentFrame, speed, loop, zoom, synchronizationMode, metadata, players } =
     useSelector(actorRef, (state: any) => ({
       playbackState: state.context.playbackState,
       currentFrame: Math.round(state.context.currentFrame), // Round to avoid floating point re-renders
       speed: state.context.speed,
       loop: state.context.loop,
+      zoom: state.context.zoom,
       synchronizationMode: state.context.synchronizationMode,
       metadata: state.context.metadata,
       players: state.context.players,
@@ -68,7 +76,29 @@ const SyncControlBarComponent = ({ actorRef, className = '' }: SyncControlBarPro
     actorRef.send({ type: 'SET_SYNC_MODE', mode: newMode });
   }, [actorRef, synchronizationMode]);
 
+  const handleZoomChange = useCallback(
+    (newZoom: number) => {
+      // Send zoom change to the sync machine
+      actorRef.send({ type: 'SET_ZOOM', zoom: newZoom });
+      // Also call the external callback for other components that need it
+      if (onGlobalZoomChange) {
+        onGlobalZoomChange(newZoom);
+      }
+    },
+    [actorRef, onGlobalZoomChange]
+  );
+
   const canControl = hasAnimation && hasPlayers && readyPlayers > 0;
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onZoomIn: () => handleZoomChange(Math.min(5, zoom + 0.25)),
+    onZoomOut: () => handleZoomChange(Math.max(0.25, zoom - 0.25)),
+    onZoomReset: () => handleZoomChange(1),
+    onPlay: playbackState === 'playing' ? handlePause : handlePlay,
+    onStop: handleStop,
+    disabled: !canControl,
+  });
 
   return (
     <div className={`sync-control-bar bg-white border-t border-gray-200 px-6 py-4 ${className}`}>
@@ -171,6 +201,39 @@ const SyncControlBarComponent = ({ actorRef, className = '' }: SyncControlBarPro
 
         {/* Right: Additional Controls */}
         <div className="flex items-center space-x-3">
+          {/* Zoom Control */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-600">Zoom:</span>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => handleZoomChange(Math.max(0.25, zoom - 0.25))}
+                disabled={!canControl}
+                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-600 text-xs flex items-center justify-center transition-colors"
+                title="Zoom Out (25%) - Ctrl/Cmd + -"
+              >
+                −
+              </button>
+              <button
+                onClick={() => handleZoomChange(1)}
+                disabled={!canControl}
+                className={`text-xs font-mono w-12 text-center py-1 rounded transition-colors ${
+                  zoom === 1 ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
+                } disabled:bg-gray-50 disabled:text-gray-400`}
+                title="Reset to 100% - Ctrl/Cmd + 0"
+              >
+                {zoom.toFixed(2)}x
+              </button>
+              <button
+                onClick={() => handleZoomChange(Math.min(5, zoom + 0.25))}
+                disabled={!canControl}
+                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-600 text-xs flex items-center justify-center transition-colors"
+                title="Zoom In (25%) - Ctrl/Cmd + +"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
           {/* Speed Control */}
           <div className="flex items-center space-x-2">
             <span className="text-xs text-gray-600">Speed:</span>

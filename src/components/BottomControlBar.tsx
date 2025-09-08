@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { GlobalControls } from '../types';
+import { useKeyboardShortcuts } from '../hooks';
 
 interface BottomControlBarProps {
   playerCount: number;
@@ -60,6 +61,16 @@ export function BottomControlBar({
     },
     [onGlobalZoomChange]
   );
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onZoomIn: () => handleZoomChange(Math.min(5, globalZoom + 0.25)),
+    onZoomOut: () => handleZoomChange(Math.max(0.25, globalZoom - 0.25)),
+    onZoomReset: () => handleZoomChange(1),
+    onPlay: globalControls.isPlaying ? onGlobalPause : onGlobalPlay,
+    onStop: onGlobalStop,
+    disabled: totalFrames === 0,
+  });
 
   return (
     <div className={`bg-white border-t border-gray-200 px-6 py-4 ${className}`}>
@@ -156,17 +167,25 @@ export function BottomControlBar({
             <span className="text-xs text-gray-600">Zoom:</span>
             <div className="flex items-center space-x-1">
               <button
-                onClick={() => handleZoomChange(Math.max(0.5, globalZoom - 0.25))}
-                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs flex items-center justify-center"
-                title="Zoom Out"
+                onClick={() => handleZoomChange(Math.max(0.25, globalZoom - 0.25))}
+                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs flex items-center justify-center transition-colors"
+                title="Zoom Out (25%) - Ctrl/Cmd + -"
               >
                 −
               </button>
-              <span className="text-xs font-mono w-12 text-center">{globalZoom.toFixed(2)}x</span>
               <button
-                onClick={() => handleZoomChange(Math.min(3, globalZoom + 0.25))}
-                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs flex items-center justify-center"
-                title="Zoom In"
+                onClick={() => handleZoomChange(1)}
+                className={`text-xs font-mono w-12 text-center py-1 rounded transition-colors ${
+                  globalZoom === 1 ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'
+                }`}
+                title="Reset to 100% - Ctrl/Cmd + 0"
+              >
+                {globalZoom.toFixed(2)}x
+              </button>
+              <button
+                onClick={() => handleZoomChange(Math.min(5, globalZoom + 0.25))}
+                className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs flex items-center justify-center transition-colors"
+                title="Zoom In (25%) - Ctrl/Cmd + +"
               >
                 +
               </button>

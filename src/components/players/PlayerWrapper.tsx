@@ -91,6 +91,7 @@ export function PlayerWrapper({
     currentFrame,
     speed,
     loop,
+    zoom,
     synchronizationMode,
   } = context;
 
@@ -263,12 +264,21 @@ export function PlayerWrapper({
   return (
     <PlayerErrorBoundary playerId={playerId}>
       <div className={`player-wrapper w-full h-full relative ${className}`}>
-        <PlayerComponent
-          ref={playerRef}
-          {...playerSpecificProps}
-          {...playerProps}
+        <div
           className="w-full h-full"
-        />
+          style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: 'center center',
+            transition: 'transform 0.2s ease',
+          }}
+        >
+          <PlayerComponent
+            ref={playerRef}
+            {...playerSpecificProps}
+            {...playerProps}
+            className="w-full h-full"
+          />
+        </div>
 
         {/* Player Debug Info (only in development) */}
         {process.env.NODE_ENV === 'development' && (

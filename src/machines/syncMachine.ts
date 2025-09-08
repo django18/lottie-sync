@@ -49,6 +49,7 @@ export interface SyncMachineContext {
   currentTime: number;
   speed: number;
   loop: boolean;
+  zoom: number;
   synchronizationMode: SynchronizationMode;
 
   // State tracking
@@ -73,6 +74,7 @@ export type SyncMachineEvent =
   | { type: 'STOP' }
   | { type: 'SEEK'; frame: number; time?: number }
   | { type: 'SET_SPEED'; speed: number }
+  | { type: 'SET_ZOOM'; zoom: number }
   | { type: 'TOGGLE_LOOP' }
   | { type: 'SET_SYNC_MODE'; mode: SynchronizationMode }
   | { type: 'FRAME_UPDATE'; frame: number; time: number; playerId?: string }
@@ -161,6 +163,7 @@ const initialContext: SyncMachineContext = {
   currentTime: 0,
   speed: 1,
   loop: false,
+  zoom: 1,
   synchronizationMode: 'global',
   initializationStatus: 'idle',
   lastError: null,
@@ -356,6 +359,9 @@ export const syncMachine = createMachine(
           SET_SPEED: {
             actions: ['setSpeed', 'syncAllPlayers'],
           },
+          SET_ZOOM: {
+            actions: 'setZoom',
+          },
           TOGGLE_LOOP: {
             actions: ['toggleLoop', 'syncAllPlayers'],
           },
@@ -511,6 +517,10 @@ export const syncMachine = createMachine(
       setSpeed: assign({
         speed: ({ event }) => (event as any).speed,
         lastSyncTime: () => Date.now(),
+      }),
+
+      setZoom: assign({
+        zoom: ({ event }) => (event as any).zoom,
       }),
 
       toggleLoop: assign({
