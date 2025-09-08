@@ -1,5 +1,6 @@
 import React from 'react';
 import type { LottieFile } from '../types';
+import { ErrorDisplay } from './ErrorDisplay';
 
 interface FileValidationDialogProps {
   file: LottieFile | null;
@@ -136,26 +137,13 @@ export function FileValidationDialog({
           )}
 
           {validationResult.errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-red-900 mb-2 flex items-center">
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Errors ({validationResult.errors.length})
-              </h3>
-              <ul className="space-y-1">
-                {validationResult.errors.map((error, index) => (
-                  <li key={index} className="text-sm text-red-700 flex items-start">
-                    <span className="w-1 h-1 bg-red-400 rounded-full mt-2 mr-2 flex-shrink-0" />
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ErrorDisplay
+              title={`Validation Errors (${validationResult.errors.length})`}
+              error={validationResult.errors.join('; ')}
+              errorType="validation"
+              validationResult={validationResult}
+              showDetails={true}
+            />
           )}
 
           {validationResult.warnings.length > 0 && (

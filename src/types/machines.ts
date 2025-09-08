@@ -55,6 +55,8 @@ export interface PlayerContext extends MachineContext {
   syncMode: SynchronizationMode;
   error: string | null;
   retryCount: number;
+  retryAdvice?: string;
+  isPermanentFailure?: boolean;
 }
 
 export type PlayerEvent =
@@ -71,6 +73,8 @@ export type PlayerEvent =
   | { type: 'PLAYER_ERROR'; error: string }
   | { type: 'FRAME_UPDATE'; frame: number; time: number }
   | { type: 'RETRY' }
+  | { type: 'AUTO_RETRY' }
+  | { type: 'GIVE_UP' }
   | { type: 'DISPOSE' };
 
 export interface SyncCoordinatorContext extends MachineContext {

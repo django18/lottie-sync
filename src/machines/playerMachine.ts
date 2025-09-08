@@ -1,6 +1,7 @@
 import { createMachine, assign, fromPromise } from 'xstate';
 import type { PlayerContext, PlayerEvent } from '../types/machines';
 import type { PlayerState, PlaybackState } from '../types';
+import { globalRetryService } from '../services/retryService';
 
 const initialPlayerState: PlayerState = {
   id: '',
@@ -207,16 +208,88 @@ export const playerMachine = createMachine(
         },
       },
       error: {
-        entry: 'updateState',
-        on: {
-          RETRY: {
-            target: 'initializing',
-            actions: 'incrementRetryCount',
-            guard: ({ context }) => context.retryCount < 3,
+        entry: ['updateState', 'logError'],
+        states: {
+          evaluating: {
+            invoke: {
+              id: 'evaluateRetry',
+              src: 'evaluateRetryService',
+              input: ({ context }) => ({
+                playerId: context.config.id,
+                error: context.error || 'Unknown error',
+                playerType: context.config.type,
+                retryCount: context.retryCount,
+              }),
+              onDone: {
+                target: 'retryable',
+                actions: 'setRetryAdvice',
+              },
+              onError: {
+                target: 'permanent',
+              },
+            },
           },
+          retryable: {
+            on: {
+              RETRY: {
+                target: '#player.error.retrying',
+                guard: 'canRetryPlayer',
+              },
+              AUTO_RETRY: {
+                target: '#player.error.retrying',
+                guard: 'shouldAutoRetry',
+              },
+              GIVE_UP: {
+                target: 'permanent',
+              },
+            },
+            after: {
+              3000: {
+                target: '#player.error.retrying',
+                guard: 'shouldAutoRetry',
+              },
+            },
+          },
+          retrying: {
+            invoke: {
+              id: 'retryPlayer',
+              src: 'retryPlayerService',
+              input: ({ context }) => ({
+                playerId: context.config.id,
+                playerType: context.config.type,
+                error: context.error || 'Unknown error',
+                container: context.container,
+                file: context.file,
+                config: context.config,
+              }),
+              onDone: {
+                target: '#player.ready.idle',
+                actions: ['assignPlayerInstance', 'resetRetryCount', 'clearRetryState'],
+              },
+              onError: {
+                target: 'evaluating',
+                actions: ['setError', 'incrementRetryCount'],
+              },
+            },
+          },
+          permanent: {
+            entry: 'markAsPermanentFailure',
+            on: {
+              INITIALIZE: {
+                target: '#player.initializing',
+                actions: ['resetRetryCount', 'assignInitializationData', 'clearRetryState'],
+              },
+              DISPOSE: {
+                target: '#player.disposed',
+              },
+            },
+          },
+        },
+        initial: 'evaluating',
+        on: {
           INITIALIZE: {
-            target: 'initializing',
-            actions: ['resetRetryCount', 'assignInitializationData'],
+            target: '#player.initializing',
+            actions: ['resetRetryCount', 'assignInitializationData', 'clearRetryState'],
           },
           DISPOSE: {
             target: '#player.disposed',
@@ -332,6 +405,7 @@ export const playerMachine = createMachine(
         state: ({ context }) => ({
           ...context.state,
           state: 'error' as PlaybackState,
+          error: (event as any).error || 'An error occurred',
         }),
       }),
       incrementRetryCount: assign({
@@ -341,6 +415,26 @@ export const playerMachine = createMachine(
         retryCount: 0,
         error: null,
       }),
+      setRetryAdvice: assign({
+        retryAdvice: ({ event }) => (event as any).output.advice,
+      }),
+      markAsPermanentFailure: assign({
+        isPermanentFailure: true,
+        state: ({ context }) => ({
+          ...context.state,
+          state: 'error' as PlaybackState,
+        }),
+      }),
+      clearRetryState: ({ context }) => {
+        globalRetryService.clearRetryState(context.config.id);
+      },
+      logError: ({ context }) => {
+        console.error(`💥 [PLAYER-${context.config.id.slice(-6)}] Error:`, context.error);
+        console.error(
+          `💥 [PLAYER-${context.config.id.slice(-6)}] Retry count:`,
+          context.retryCount
+        );
+      },
       notifyReady: () => {},
       disposePlayer: ({ context }) => {
         if (context.instance) {
@@ -361,7 +455,73 @@ export const playerMachine = createMachine(
       },
       finalCleanup: ({ context }) => {
         console.log(`🏁 [PLAYER] Final cleanup for ${context.config.id}`);
+        globalRetryService.clearRetryState(context.config.id);
       },
+    },
+    guards: {
+      canRetryPlayer: ({ context }) => {
+        return globalRetryService.shouldRetry(
+          context.config.id,
+          context.error || 'Unknown error',
+          context.config.type
+        );
+      },
+      shouldAutoRetry: ({ context }) => {
+        const retryState = globalRetryService.getRetryState(context.config.id);
+        return !!(retryState && retryState.totalRetries === 0); // Only auto-retry on first failure
+      },
+    },
+    actors: {
+      evaluateRetryService: fromPromise(
+        async ({
+          input,
+        }: {
+          input: { playerId: string; error: string; playerType: any; retryCount: number };
+        }) => {
+          const { playerId, error, playerType } = input;
+          const advice = globalRetryService.getRetryAdvice(playerId, error, playerType);
+          const canRetry = globalRetryService.shouldRetry(playerId, error, playerType);
+
+          return {
+            canRetry,
+            advice,
+          };
+        }
+      ),
+      retryPlayerService: fromPromise(
+        async ({
+          input,
+        }: {
+          input: {
+            playerId: string;
+            playerType: any;
+            error: string;
+            container: any;
+            file: any;
+            config: any;
+          };
+        }) => {
+          const { playerId, playerType, error } = input;
+
+          return await globalRetryService.executeRetry(
+            playerId,
+            playerType,
+            async () => {
+              // This would be replaced with actual player initialization logic
+              // For now, simulate initialization
+              await new Promise((resolve) => setTimeout(resolve, 500));
+
+              // Simulate success/failure based on error type
+              if (error.toLowerCase().includes('network') && Math.random() > 0.3) {
+                throw new Error('Network still unavailable');
+              }
+
+              return { instance: {} }; // Mock instance
+            },
+            error
+          );
+        }
+      ),
     },
   }
 );

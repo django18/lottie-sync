@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import type { PlayerAdapter } from '../services/playerService';
+import { ErrorDisplay } from './ErrorDisplay';
 
 interface PlayerContainerProps {
   playerId: string;
@@ -18,6 +19,8 @@ interface PlayerContainerProps {
   loop?: boolean;
   globalZoom?: number;
   className?: string;
+  retryCount?: number;
+  onRetry?: () => void;
 }
 
 export function PlayerContainer({
@@ -37,6 +40,8 @@ export function PlayerContainer({
   loop = false,
   globalZoom = 1,
   className = '',
+  retryCount = 0,
+  onRetry,
 }: PlayerContainerProps) {
   console.log(`📦 [CONTAINER-${playerId}] PlayerContainer render with props:`, {
     playerId: playerId.slice(-6),
@@ -66,6 +71,10 @@ export function PlayerContainer({
   const [localZoom, setLocalZoom] = useState(1);
 
   const hasCalledPlayerRef = useRef(false);
+
+  const handleRetry = useCallback(() => {
+    onRetry?.();
+  }, [onRetry]);
   console.log(
     `🔄 [CONTAINER-${playerId}] hasCalledPlayerRef initialized:`,
     hasCalledPlayerRef.current
@@ -380,21 +389,15 @@ export function PlayerContainer({
 
             {/* Error Overlay */}
             {status === 'error' && error && (
-              <div className="absolute inset-0 bg-red-50 bg-opacity-90 flex items-center justify-center">
-                <div className="text-center">
-                  <svg
-                    className="mx-auto w-8 h-8 text-red-400 mb-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <p className="text-sm text-red-600">Failed to load</p>
-                </div>
+              <div className="absolute inset-0 bg-white bg-opacity-95 flex items-center justify-center p-2">
+                <ErrorDisplay
+                  title={`Player ${playerId.slice(-6)} Error`}
+                  error={error}
+                  errorType="player"
+                  retryCount={retryCount}
+                  onRetry={handleRetry}
+                  className="text-xs max-w-full"
+                />
               </div>
             )}
           </>

@@ -1,4 +1,5 @@
 export { ErrorBoundary } from './ErrorBoundary';
+export { ErrorDisplay, ErrorToast } from './ErrorDisplay';
 export { FileUpload } from './FileUpload';
 export { FileList } from './FileList';
 export { PlayerContainer } from './PlayerContainer';
