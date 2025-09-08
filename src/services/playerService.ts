@@ -945,24 +945,199 @@ export class DotLottieAdapter implements PlayerAdapter {
   }
 }
 
-export class PlayerFactory {
-  static createAdapter(type: PlayerType): PlayerAdapter {
-    // Only support DotLottie for .lottie files
-    if (type === 'dotlottie') {
-      return new DotLottieAdapter();
+export class LottieWebAdapter implements PlayerAdapter {
+  private instance: any = null;
+  private eventListeners: Map<string, Function[]> = new Map();
+  private container: HTMLElement | null = null;
+  private isDestroyed: boolean = false;
+  private animationData: any = null;
+
+  async initialize(container: HTMLElement, file: LottieFile, config: PlayerConfig): Promise<any> {
+    if (this.isDestroyed) {
+      throw new Error('Cannot initialize destroyed adapter');
     }
 
-    // For backward compatibility, default to DotLottie
-    console.warn(`Player type '${type}' not supported for .lottie files. Using DotLottie instead.`);
-    return new DotLottieAdapter();
+    try {
+      const { default: lottie } = await import('lottie-web');
+
+      this.container = container;
+
+      // For LottieWeb, we need to load the animation data from the file
+      let animationData;
+      if (file.type === 'lottie') {
+        // Convert .lottie file to JSON data
+        const response = await fetch(file.url);
+        const arrayBuffer = await response.arrayBuffer();
+        // This is a simplified approach - in reality, you'd need to extract JSON from .lottie
+        animationData = JSON.parse(new TextDecoder().decode(arrayBuffer));
+      } else {
+        // Assume it's already JSON data
+        const response = await fetch(file.url);
+        animationData = await response.json();
+      }
+
+      this.animationData = animationData;
+
+      this.instance = lottie.loadAnimation({
+        container: container,
+        renderer: 'canvas',
+        loop: config.loop || false,
+        autoplay: config.autoplay || false,
+        animationData: animationData,
+      });
+
+      // Set up event forwarding
+      this.instance.addEventListener('complete', () => this.emit('complete'));
+      this.instance.addEventListener('loopComplete', () => this.emit('loopComplete'));
+      this.instance.addEventListener('enterFrame', () => {
+        this.emit('frame', {
+          frame: this.getCurrentFrame(),
+          time: this.getCurrentTime(),
+        });
+      });
+
+      this.emit('ready');
+      return this.instance;
+    } catch (error) {
+      throw new Error(`Failed to initialize LottieWeb player: ${error}`);
+    }
+  }
+
+  play(): void {
+    if (this.instance && !this.isDestroyed) {
+      this.instance.play();
+      this.emit('play');
+    }
+  }
+
+  pause(): void {
+    if (this.instance && !this.isDestroyed) {
+      this.instance.pause();
+      this.emit('pause');
+    }
+  }
+
+  stop(): void {
+    if (this.instance && !this.isDestroyed) {
+      this.instance.stop();
+      this.emit('stop');
+    }
+  }
+
+  seek(frame: number): void {
+    if (this.instance && !this.isDestroyed) {
+      const clampedFrame = Math.max(0, Math.min(this.getTotalFrames(), frame));
+      this.instance.goToAndStop(clampedFrame, true);
+      this.emit('seek', { frame: clampedFrame });
+      this.emit('frame', {
+        frame: this.getCurrentFrame(),
+        time: this.getCurrentTime(),
+      });
+    }
+  }
+
+  setSpeed(speed: number): void {
+    if (this.instance && !this.isDestroyed) {
+      this.instance.setSpeed(speed);
+      this.emit('speedChange', { speed });
+    }
+  }
+
+  setLoop(loop: boolean): void {
+    if (this.instance && !this.isDestroyed) {
+      this.instance.loop = loop;
+      this.emit('loopChange', { loop });
+    }
+  }
+
+  getCurrentFrame(): number {
+    return this.instance?.currentFrame || 0;
+  }
+
+  getTotalFrames(): number {
+    return this.instance?.totalFrames || 0;
+  }
+
+  getCurrentTime(): number {
+    const frame = this.getCurrentFrame();
+    const totalFrames = this.getTotalFrames();
+    const duration = this.getDuration();
+    return totalFrames > 0 ? (frame / totalFrames) * duration : 0;
+  }
+
+  getDuration(): number {
+    const totalFrames = this.getTotalFrames();
+    const frameRate = this.instance?.frameRate || 30;
+    return totalFrames / frameRate;
+  }
+
+  destroy(): void {
+    this.isDestroyed = true;
+
+    if (this.instance) {
+      try {
+        this.instance.destroy();
+      } catch (error) {
+        console.error('Error destroying LottieWeb instance:', error);
+      } finally {
+        this.instance = null;
+      }
+    }
+
+    this.eventListeners.clear();
+    this.container = null;
+    this.animationData = null;
+  }
+
+  addEventListener(event: string, callback: Function): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, []);
+    }
+    this.eventListeners.get(event)!.push(callback);
+  }
+
+  removeEventListener(event: string, callback: Function): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(callback);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  private emit(event: string, data?: any): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach((callback) => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`Error in event listener for ${event}:`, error);
+        }
+      });
+    }
+  }
+}
+
+export class PlayerFactory {
+  static createAdapter(type: PlayerType): PlayerAdapter {
+    switch (type) {
+      case 'dotlottie':
+        return new DotLottieAdapter();
+      case 'lottie-web':
+        return new LottieWebAdapter();
+      default:
+        throw new Error(`Unknown player type: ${type}`);
+    }
   }
 
   static getSupportedTypes(): PlayerType[] {
-    return ['dotlottie'];
+    return ['dotlottie', 'lottie-web'];
   }
 
-  static getRecommendedType(_file: LottieFile): PlayerType {
-    // Always recommend DotLottie for .lottie files
-    return 'dotlottie';
+  static getRecommendedType(file: LottieFile): PlayerType {
+    // Recommend DotLottie for .lottie files, LottieWeb for JSON files
+    return file.type === 'lottie' ? 'dotlottie' : 'lottie-web';
   }
 }

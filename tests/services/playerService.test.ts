@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { PlayerFactory, DotLottieAdapter, LottieWebAdapter } from '../../src/services/playerService';
+import {
+  PlayerFactory,
+  DotLottieAdapter,
+  LottieWebAdapter,
+} from '../../src/services/playerService';
 import type { LottieFile, PlayerConfig } from '../../src/types';
 
 describe('PlayerFactory', () => {
@@ -21,7 +25,7 @@ describe('PlayerFactory', () => {
 
   it('should return supported types', () => {
     const types = PlayerFactory.getSupportedTypes();
-    expect(types).toEqual(['dotlottie', 'lottie-web', 'skottie']);
+    expect(types).toEqual(['dotlottie', 'lottie-web']);
   });
 
   it('should recommend correct player type', () => {
@@ -32,10 +36,10 @@ describe('PlayerFactory', () => {
       file: new File(['test'], 'test.lottie'),
       type: 'lottie',
     };
-    
+
     const recommended = PlayerFactory.getRecommendedType(lottieFile);
     expect(recommended).toBe('dotlottie');
-    
+
     const jsonFile: LottieFile = {
       id: '2',
       name: 'test.json',
@@ -43,7 +47,7 @@ describe('PlayerFactory', () => {
       file: new File(['{}'], 'test.json'),
       type: 'json',
     };
-    
+
     const recommendedJson = PlayerFactory.getRecommendedType(jsonFile);
     expect(recommendedJson).toBe('lottie-web');
   });
@@ -69,7 +73,7 @@ describe('PlayerAdapter', () => {
   describe('DotLottieAdapter', () => {
     it('should implement all required methods', () => {
       const adapter = new DotLottieAdapter();
-      
+
       expect(typeof adapter.play).toBe('function');
       expect(typeof adapter.pause).toBe('function');
       expect(typeof adapter.stop).toBe('function');
@@ -84,10 +88,10 @@ describe('PlayerAdapter', () => {
     it('should handle event listeners', () => {
       const adapter = new DotLottieAdapter();
       const mockCallback = vi.fn();
-      
+
       adapter.addEventListener('play', mockCallback);
       adapter.play(); // Should emit play event
-      
+
       adapter.removeEventListener('play', mockCallback);
     });
   });
@@ -95,7 +99,7 @@ describe('PlayerAdapter', () => {
   describe('LottieWebAdapter', () => {
     it('should implement all required methods', () => {
       const adapter = new LottieWebAdapter();
-      
+
       expect(typeof adapter.play).toBe('function');
       expect(typeof adapter.pause).toBe('function');
       expect(typeof adapter.stop).toBe('function');
@@ -109,7 +113,7 @@ describe('PlayerAdapter', () => {
 
     it('should return correct default values before initialization', () => {
       const adapter = new LottieWebAdapter();
-      
+
       expect(adapter.getCurrentFrame()).toBe(0);
       expect(adapter.getTotalFrames()).toBe(0);
       expect(adapter.getCurrentTime()).toBe(0);

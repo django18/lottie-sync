@@ -16,7 +16,7 @@ export interface LottieFile {
   name: string;
   url: string;
   file: File;
-  type: 'lottie';
+  type: 'lottie' | 'json';
   metadata?: {
     version?: string;
     frameRate?: number;
