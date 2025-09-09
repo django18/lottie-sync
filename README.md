@@ -54,40 +54,32 @@ This application uses a **hierarchical state machine architecture** with XState 
 
 ### Current Capabilities
 
-- ✅ **1-4![1757292805055](image/README/1757292805055.png)![1757292808306](image/README/1757292808306.png) players** synchronized at 60fps
+- ✅ **1-10 players** synchronized at 60fps
 - ✅ **Basic error recovery** with retry logic
 - ✅ **Memory management** with proper cleanup
 - ✅ **Performance monitoring** via console logging
 
-## 📚 Documentation
+## 📚 Technical Documentation
 
-### For Different Roles
+**Complete technical documentation for recruiting teams and engineers:**
 
-**🏗️ Architects & Senior Developers**
+**[docs/TECHNICAL_OVERVIEW.md](./docs/TECHNICAL_OVERVIEW.md)**
 
-- **[Architecture Decision Record](./docs/ARCHITECTURE.md)** - Complete design rationale and technical decisions
-- **[Scaling Strategies](./docs/SCALING_STRATEGIES.md)** - How to scale from 10 to 200+ players
+This comprehensive document covers:
 
-**👨‍💻 Developers**
+- **Architecture Overview** - XState-based state machine architecture with 3 active machines
+- **State Machine Diagrams** - Visual mermaid diagrams for all state machines
+- **Scaling Strategy** - Detailed roadmap for scaling from 10 to 200+ players
+- **Performance Analysis** - Current bottlenecks, tradeoffs, and optimization strategies
+- **Implementation Details** - Master-slave synchronization, error recovery, resource management
+- **Migration Roadmap** - Phase-by-phase scaling implementation plan
 
-- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Practical patterns, testing, and best practices
-- **[Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)** - Detailed state machine documentation
+### Key Technical Highlights
 
-**👨‍💼 Product Managers**
-
-- **[Current State & Improvements](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)** - Honest assessment and roadmap
-
-**🧪 QA Engineers**
-
-- **[Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)** - Event flows and testing scenarios
-
-### Quick Navigation
-
-- **Getting Started**: This README + [Developer Guide](./docs/DEVELOPER_GUIDE.md)
-- **Understanding Architecture**: [Architecture Decisions](./docs/ARCHITECTURE.md)
-- **Implementation Details**: [Technical Reference](./docs/STATE_MACHINE_REFERENCE.md)
-- **Scaling Plans**: [Scaling Strategies](./docs/SCALING_STRATEGIES.md)
-- **Current Limitations**: [State & Improvements](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)
+- **Current Capacity**: 10 synchronized Lottie players with 60fps frame-perfect sync
+- **Architecture**: Hierarchical state machines with master-slave synchronization
+- **Performance**: <20ms sync latency (up to 5 players), degrades to ~50ms at 10 players
+- **Scaling Potential**: Roadmap to 200+ players through Web Workers and distributed architecture
 
 ## 🔧 Technical Stack
 
@@ -158,7 +150,4 @@ MIT License - See LICENSE file for details.
 
 **Need Help?**
 
-- Architecture questions → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
-- Development help → [DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)
-- Performance concerns → [SCALING_STRATEGIES.md](./docs/SCALING_STRATEGIES.md)
-- Current limitations → [CURRENT_STATE_AND_IMPROVEMENTS.md](./docs/CURRENT_STATE_AND_IMPROVEMENTS.md)
+- **All technical questions** → [docs/TECHNICAL_OVERVIEW.md](./docs/TECHNICAL_OVERVIEW.md)
