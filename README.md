@@ -132,15 +132,14 @@ This comprehensive document covers:
 - Network synchronization
 - Enterprise monitoring and analytics
 
-_See [Scaling Strategies](./docs/SCALING_STRATEGIES.md) for detailed technical roadmap._
+_See [Technical Overview](./docs/TECHNICAL_OVERVIEW.md) for detailed technical roadmap._
 
 ## 🤝 Contributing
 
-1. Read the [Developer Guide](./docs/DEVELOPER_GUIDE.md) for development patterns
-2. Check [Architecture Decisions](./docs/ARCHITECTURE.md) to understand design choices
-3. Follow existing code patterns and state machine conventions
-4. Add tests for new functionality
-5. Update documentation for architectural changes
+1. Read the [Technical Overview](./docs/TECHNICAL_OVERVIEW.md) for architecture and development patterns
+2. Follow existing code patterns and state machine conventions
+3. Add tests for new functionality
+4. Update documentation for architectural changes
 
 ## 📄 License
 
